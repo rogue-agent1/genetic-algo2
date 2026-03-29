@@ -1,59 +1,43 @@
 #!/usr/bin/env python3
-"""genetic_algo2 - Genetic algorithm framework."""
-import argparse, random, math
+"""Genetic algorithm framework — selection, crossover, mutation."""
+import sys, random
 
-def onemax_fitness(individual): return sum(individual)
-def target_string_fitness(individual, target):
-    return sum(1 for a, b in zip(individual, target) if a == b)
+class GeneticAlgorithm:
+    def __init__(self, pop_size=50, gene_length=20, mutation_rate=0.01):
+        self.pop_size = pop_size
+        self.gene_length = gene_length
+        self.mutation_rate = mutation_rate
+        self.population = [[random.randint(0,1) for _ in range(gene_length)] for _ in range(pop_size)]
+    def fitness(self, individual):
+        return sum(individual)  # default: maximize ones
+    def select(self):
+        tournament = random.sample(self.population, min(3, len(self.population)))
+        return max(tournament, key=self.fitness)
+    def crossover(self, p1, p2):
+        pt = random.randint(1, self.gene_length - 1)
+        return p1[:pt] + p2[pt:], p2[:pt] + p1[pt:]
+    def mutate(self, individual):
+        return [g if random.random() > self.mutation_rate else 1-g for g in individual]
+    def evolve(self, generations=100):
+        for gen in range(generations):
+            new_pop = []
+            best = max(self.population, key=self.fitness)
+            new_pop.append(best)  # elitism
+            while len(new_pop) < self.pop_size:
+                p1, p2 = self.select(), self.select()
+                c1, c2 = self.crossover(p1, p2)
+                new_pop.extend([self.mutate(c1), self.mutate(c2)])
+            self.population = new_pop[:self.pop_size]
+        return max(self.population, key=self.fitness)
 
-def tournament_select(pop, fitness, k=3):
-    candidates = random.sample(list(zip(pop, fitness)), k)
-    return max(candidates, key=lambda x: x[1])[0]
-
-def roulette_select(pop, fitness):
-    total = sum(fitness)
-    if total == 0: return random.choice(pop)
-    r = random.uniform(0, total)
-    cumsum = 0
-    for ind, f in zip(pop, fitness):
-        cumsum += f
-        if cumsum >= r: return ind
-    return pop[-1]
-
-def crossover(p1, p2):
-    point = random.randint(1, len(p1) - 1)
-    return p1[:point] + p2[point:], p2[:point] + p1[point:]
-
-def mutate(individual, rate=0.01):
-    return [1 - g if random.random() < rate else g for g in individual]
-
-def run_ga(pop_size=100, gene_length=50, generations=200, mut_rate=0.01, selection="tournament"):
-    pop = [[random.randint(0, 1) for _ in range(gene_length)] for _ in range(pop_size)]
-    select = tournament_select if selection == "tournament" else roulette_select
-    for gen in range(generations):
-        fitness = [onemax_fitness(ind) for ind in pop]
-        best_fit = max(fitness); best_ind = pop[fitness.index(best_fit)]
-        if gen % (generations // 10) == 0:
-            print(f"Gen {gen:4d}: best={best_fit}/{gene_length} avg={sum(fitness)/len(fitness):.1f}")
-        if best_fit == gene_length: print(f"Solved at generation {gen}!"); return best_ind
-        new_pop = [best_ind]  # elitism
-        while len(new_pop) < pop_size:
-            p1 = select(pop, fitness); p2 = select(pop, fitness)
-            c1, c2 = crossover(p1, p2)
-            new_pop.extend([mutate(c1, mut_rate), mutate(c2, mut_rate)])
-        pop = new_pop[:pop_size]
-    return max(pop, key=onemax_fitness)
-
-def main():
-    p = argparse.ArgumentParser(description="Genetic algorithm")
-    p.add_argument("-p", "--pop-size", type=int, default=100)
-    p.add_argument("-g", "--generations", type=int, default=200)
-    p.add_argument("-l", "--length", type=int, default=50)
-    p.add_argument("-m", "--mutation", type=float, default=0.02)
-    p.add_argument("-s", "--selection", choices=["tournament", "roulette"], default="tournament")
-    args = p.parse_args()
-    best = run_ga(args.pop_size, args.length, args.generations, args.mutation, args.selection)
-    print(f"\nBest fitness: {onemax_fitness(best)}/{args.length}")
+def test():
+    random.seed(42)
+    ga = GeneticAlgorithm(pop_size=30, gene_length=20, mutation_rate=0.02)
+    best = ga.evolve(50)
+    assert ga.fitness(best) >= 15  # should get close to all 1s
+    assert len(best) == 20
+    print("  genetic_algo2: ALL TESTS PASSED")
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) > 1 and sys.argv[1] == "test": test()
+    else: print("Genetic algorithm framework")

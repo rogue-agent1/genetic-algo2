@@ -1,11 +1,10 @@
 # genetic-algo2
 
-Genetic algorithm framework with multiple selection strategies.
-
-Zero dependencies. Python 3.8+.
+Single-file Python CLI. Zero dependencies.
 
 ## Usage
 
 ```bash
-python3 genetic_algo2.py --help
+python3 genetic_algo2.py
+python3 genetic_algo2.py test
 ```
