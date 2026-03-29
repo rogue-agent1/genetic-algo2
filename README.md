@@ -1,10 +1,3 @@
-# genetic-algo2
-
-Single-file Python CLI. Zero dependencies.
-
-## Usage
-
-```bash
-python3 genetic_algo2.py
-python3 genetic_algo2.py test
-```
+# genetic_algo2
+Genetic algorithm — tournament selection, crossover, mutation, elitism.
+Single-file Python, zero dependencies.
